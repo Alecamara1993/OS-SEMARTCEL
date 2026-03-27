@@ -1,167 +1,161 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMARTCEL - Gerador de O.S.</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        :root { --gold: #D4AF37; }
-        body { background: #1a1a1a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMARTCEL - Edição Direta de O.S.</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    /* Estilo padrão para a tela de edição (Fundo escuro para destacar o papel) */
+    body { background-color: #121212; font-family: 'Arial', sans-serif; padding: 20px; color: #fff; }
+    
+    /* Configuração do "Papel" A4 na tela */
+    .print-area { 
+        display: block; 
+        background: #fff; 
+        color: #000; 
+        width: 210mm; /* Largura A4 */
+        min-height: 297mm; /* Altura A4 */
+        margin: 0 auto; 
+        padding: 10mm; 
+        border: 2px solid #000; 
+        box-shadow: 0 0 30px rgba(0,0,0,0.8); 
+        position: relative;
+    }
+
+    /* 🔥 O SEGREDO DA EDIÇÃO DIRETA: Estilizando os Inputs para parecerem texto normal */
+    .edit-input {
+        background: transparent;
+        border: none;
+        color: #000;
+        font-family: inherit;
+        font-size: inherit;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+        outline: none; /* Remove a borda azul ao clicar */
+    }
+    /* Mostra uma bordinha bem leve apenas ao passar o mouse para indicar que é editável */
+    .edit-input:hover { background-color: #f0f9ff; border-bottom: 1px dashed #7dd3fc; }
+    .edit-input:focus { background-color: #e0f2fe; border-bottom: 1px solid #0ea5e9; }
+
+    /* Estilos da Tabela e Layout (Fiel à imagem)  */
+    .os-table { width: 100%; border-collapse: collapse; margin-top: -1px; }
+    .os-table td, .os-table th { border: 1.5px solid #000; padding: 6px 10px; font-size: 13px; text-align: left; vertical-align: middle; }
+    
+    .header-os { text-align: center; border: 1.5px solid #000; padding: 15px; margin-bottom: -1px; }
+    .bg-gray-os { background-color: #e5e7eb; -webkit-print-color-adjust: exact; } /* Cinza para títulos das seções  */
+
+    /* Botão Flutuante de Impressão */
+    .print-btn-float {
+        position: fixed; bottom: 30px; right: 30px; 
+        background-color: #D4AF37; color: #000; 
+        font-weight: bold; padding: 15px 25px; border-radius: 50px; 
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3); 
+        cursor: pointer; transition: all 0.2s; z-index: 9999;
+    }
+    .print-btn-float:hover { transform: scale(1.05); background-color: #bfa02f; }
+
+    /* ✅ CONFIGURAÇÃO DE IMPRESSÃO */
+    @media print {
+        body { background: #fff; padding: 0; margin: 0; }
+        .no-print { display: none !important; } /* Esconde o botão e avisos */
+        .print-area { width: 100%; border: none; box-shadow: none; padding: 10mm; margin: 0; }
+        .bg-gray-os { background-color: #e5e7eb !important; }
         
-        /* Estilos para a área de preenchimento */
-        .input-field { background: #2a2a2a; border: 1px solid #3a3a3a; color: #fff; padding: 8px; border-radius: 4px; width: 100%; font-size: 14px;}
-        .input-field:focus { border-color: var(--gold); outline: none; }
-        .label-os { display: block; text-sm mb-1; color: #aaa; font-size: 12px;}
-
-        /* Estilos de Impressão (O que sai no papel) */
-        @media print {
-            body { background: #fff; color: #000; padding: 0; margin: 0; }
-            .no-print { display: none !important; }
-            .print-area { display: block !important; width: 100%; padding: 20px; border: 1px solid #000; box-shadow: none; }
-            .border-print { border: 1px solid #000 !important; }
-            .text-black-print { color: #000 !important; }
-            .bg-gray-print { background-color: #f3f4f6 !important; -webkit-print-color-adjust: exact; }
-            input, textarea { border: none !important; background: transparent !important; color: #000 !important; padding: 0 !important; width: auto !important;}
-        }
-
-        .print-area { display: none; background: #fff; color: #000; border: 2px solid #000; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .checklist-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    </style>
+        /* Garante que os inputs não mostrem fundo ou bordas no papel */
+        .edit-input { background: transparent !important; border: none !important; color: #000 !important; }
+        .edit-input:hover, .edit-input:focus { background: transparent !important; border: none !important; }
+    }
+</style>
 </head>
 <body>
 
-    <div class="max-w-4xl mx-auto bg-neutral-900 p-6 rounded-lg shadow-xl no-print mb-10">
-        <div class="flex items-center gap-4 mb-6 border-b border-neutral-700 pb-4">
-            <img src="logo-smartcel.png" alt="SMARTCEL Logo" class="h-16 w-16 rounded-full border-2 border-yellow-600 object-cover">
-            <h1 class="text-2xl font-bold" style="color: var(--gold);">📝 GERAR NOVA O.S.</h1>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="label-os">Nome do Cliente:</label>
-                <input type="text" id="in_nome" class="input-field" placeholder="Ex: Alessandro Câmara">
-            </div>
-            <div>
-                <label class="label-os">Telefone/WhatsApp:</label>
-                <input type="text" id="in_fone" class="input-field" placeholder="(21) 97914-7225">
-            </div>
-            <div class="md:col-span-2">
-                <label class="label-os">Aparelho (Marca/Modelo):</label>
-                <input type="text" id="in_modelo" class="input-field" placeholder="iPhone 13 Pro Max - Azul">
-            </div>
-            <div>
-                <label class="label-os">Senha do Dispositivo:</label>
-                <input type="text" id="in_senha" class="input-field" placeholder="Padrão ou Numérica">
-            </div>
-            <div>
-                <label class="label-os">IMEI / Serial:</label>
-                <input type="text" id="in_imei" class="input-field">
-            </div>
-            <div class="md:col-span-2">
-                <label class="label-os">Relato do Defeito / Serviço a fazer:</label>
-                <textarea id="in_servico" class="input-field h-20"></textarea>
-            </div>
-        </div>
+    <button onclick="window.print()" class="print-btn-float no-print">
+        🖨️ IMPRIMIR O.S. (A4)
+    </button>
 
-        <button onclick="gerarEImprimir()" class="w-full mt-8 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 rounded-lg transition-all text-sm uppercase tracking-widest">
-            🖨️ GERAR O.S. E IMPRIMIR
-        </button>
+    <div class="max-w-5xl mx-auto no-print bg-yellow-950/30 border border-yellow-700/50 p-4 rounded-xl mb-6 text-center text-yellow-200 text-sm">
+        👋 <b>Olá MARCIO!</b> Esta é a interface de edição direta. <br>
+        Clique em qualquer texto no papel abaixo para alterar as informações. Quando terminar, clique no botão de imprimir.
     </div>
 
-    <div id="os_papel" class="print-area max-w-4xl mx-auto p-6 text-black">
-        <div class="flex justify-between items-center border-b-2 border-black pb-4 mb-4">
-            <div class="flex items-center gap-4">
-                <img src="C:\Users\Alessandro\Desktop\workana\SMARTCEL\logo-smartcel.png.png" alt="SMARTCEL Logo" class="h-20 w-20 object-cover border border-black">
-                <div>
-                    <h1 class="text-3xl font-black tracking-tighter">SMARTCEL</h1>
-                    <p class="text-sm font-bold uppercase tracking-wider">ASSISTÊNCIA TÉCNICA ESPECIALIZADA</p>
-                    <p class="text-xs">Rua Eduardo Douradinho, 26 - Belford Roxo - RJ</p>
-                    <p class="text-xs">WhatsApp: <strong>(21) 97914-7225</strong></p>
-                </div>
-            </div>
-            <div class="text-right border border-black p-3 bg-gray-100 bg-gray-print">
-                <p class="text-sm">O.S. Nº <span id="out_os_num" class="font-bold text-lg">0001</span></p>
-                <p class="text-xs">Data: <span id="out_data"></span></p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-2 border border-black p-3 gap-y-2 mb-4 text-sm">
-            <p><strong>CLIENTE:</strong> <span id="out_nome" class="font-medium"></span></p>
-            <p><strong>CONTATO:</strong> <span id="out_fone" class="font-medium"></span></p>
-            <p class="md:col-span-2"><strong>MODELO:</strong> <span id="out_modelo" class="font-medium uppercase"></span></p>
-            <p><strong>SENHA:</strong> <span id="out_senha" class="font-medium"></span></p>
-            <p><strong>IMEI:</strong> <span id="out_imei" class="font-medium"></span></p>
-        </div>
-
-        <div class="border border-black mb-4">
-            <div class="bg-gray-100 bg-gray-print p-2 border-b border-black font-bold text-center text-sm uppercase tracking-wider">Descrição do Serviço / Defeito Relatado</div>
-            <div class="p-4 h-40 text-sm italic text-gray-800 text-black-print" id="out_servico"></div>
-        </div>
-
-        <div class="border border-black p-4 bg-gray-50 bg-gray-print">
-            <h3 class="font-bold text-xs mb-3 underline text-center uppercase tracking-wider">Termos de Serviço / Garantia</h3>
-            <ul class="text-[11px] space-y-1.5 list-disc pl-5 leading-tight text-gray-900 text-black-print">
-                <li>A garantia de <strong>90 dias</strong> será válida apenas para a peça trocada ou serviço descrito nesta O.S.</li>
-                <li>Aparelhos que não ligam ou com tela quebrada: não nos responsabilizamos por defeitos ocultos além dos descritos, por impossibilidade de teste prévio.</li>
-                <li><strong>UMIDADE/ÁGUA:</strong> Caso o aparelho tenha tido contato com líquidos, a abertura pode agravar defeitos na placa, não havendo garantia nestes casos.</li>
-                <li>A garantia não cobre: mau uso, quedas, contato com líquidos, selos de garantia rompidos ou reparos por terceiros.</li>
-                <li>Aparelhos prontos e não retirados em 90 dias poderão ser vendidos para cobrir custos de peças e mão de obra (Art. 652 CC).</li>
-            </ul>
-        </div>
-
-        <div class="mt-16 flex justify-around text-center text-xs">
-            <div class="border-t-2 border-black w-72 pt-2">
-                <p class="font-bold">SMARTCEL</p>
-                <p class="text-gray-600 text-black-print">Assinatura do Técnico</p>
-            </div>
-            <div class="border-t-2 border-black w-72 pt-2">
-                <p id="out_nome_ass" class="font-bold uppercase"></p>
-                <p class="text-gray-600 text-black-print">Assinatura do Cliente</p>
-            </div>
-        </div>
+    <div id="os_print" class="print-area">
         
-        <div class="text-center text-[10px] text-gray-400 text-black-print mt-10 no-print-text">
-            SMARTCEL © Sistema de Gestão de O.S.
+        <div class="header-os">
+            <img src="C:\Users\Alessandro\Desktop\workana\SMARTCEL\GERADOR DE OS\logo-smartcel.png.png" alt="Logo" class="h-16 mx-auto mb-3">
+            <h2 class="text-2xl font-black tracking-tight"><input type="text" class="edit-input text-center font-black" value="SMARTCELL ASSISTÊNCIA TÉCNICA"></h2>
+            <p class="text-xs font-bold"><input type="text" class="edit-input text-center font-bold" value="Rua Eduardo Douradinho, 26 - Belford Roxo - Rio de Janeiro"></p>
+            <p class="text-sm">WhatsApp: <strong><input type="text" class="edit-input text-center font-bold" value="21 97914-7225"></strong></p>
+        </div>
+
+        <div class="flex bg-gray-os font-bold text-sm" style="margin-top: -1px; border: 1.5px solid #000;">
+            <div class="flex-1 p-3 border-r border-black">Data: <input type="text" class="edit-input font-bold" value="26/03/2026"></div>
+            <div class="flex-[2] p-3 text-center border-r border-black uppercase tracking-widest"><input type="text" class="edit-input text-center font-bold uppercase tracking-widest" value="ORDEM DE SERVIÇO / CHECKLIST"></div>
+            <div class="flex-1 p-3 text-right">N° <input type="text" class="edit-input text-right font-black text-lg" value="1"></div>
+        </div>
+
+        <table class="os-table">
+            <tr><td width="15%"><strong>NOME:</strong></td><td><input type="text" class="edit-input uppercase font-medium" placeholder="Nome Completo do Cliente"></td></tr>
+            <tr><td><strong>FONE:</strong></td><td><input type="text" class="edit-input" placeholder="(XX) XXXXX-XXXX"></td></tr>
+            <tr><td><strong>ENDEREÇO:</strong></td><td><input type="text" class="edit-input" placeholder="Rua, Número, Bairro, Cidade"></td></tr>
+        </table>
+
+        <div class="bg-gray-os text-center font-bold text-sm p-2" style="border: 1.5px solid #000; margin-top: -1px;">DADOS DO DISPOSITIVO</div>
+        
+        <table class="os-table">
+            <tr><td width="30%"><strong>MARCA / MODELO:</strong></td><td><input type="text" class="edit-input uppercase font-medium" placeholder="Ex: Samsung Galaxy S23 Ultra"></td></tr>
+            <tr><td><strong>SENHA:</strong></td><td><input type="text" class="edit-input" placeholder="Senha Numérica ou Padrão"></td></tr>
+            <tr><td><strong>SERIAL / IMEI:</strong></td><td><input type="text" class="edit-input" placeholder="Nº de Série ou IMEI 1"></td></tr>
+            <tr><td><strong>ACESSÓRIOS:</strong></td><td><input type="text" class="edit-input" placeholder="Ex: Capa, Carregador"></td></tr>
+        </table>
+
+        <div class="bg-gray-os text-center font-bold text-sm p-2" style="border: 1.5px solid #000; margin-top: -1px;">CHECKLIST</div>
+        
+        <div class="p-3 grid grid-cols-4 gap-3 text-[11px] uppercase font-bold" style="border: 1.5px solid #000; margin-top: -1px;">
+            <div>Liga: ( )S ( )N</div>
+            <div>Wifi: ( )S ( )N</div>
+            <div>Touch: ( )S ( )N</div>
+            <div>Câmeras: ( )S ( )N</div>
+            <div>Microfone: ( )S ( )N</div>
+            <div>Botões: ( )S ( )N</div>
+            <div>Sinal: ( )S ( )N</div>
+            <div>Carga: ( )S ( )N</div>
+            <div class="col-span-4 mt-2">
+                <strong>Obs:</strong> <input type="text" class="edit-input inline-block w-auto font-normal italic" placeholder="Anote observações visuais ou testes rápidos aqui">
+            </div>
+        </div>
+
+        <div class="bg-gray-os text-center font-bold text-sm p-2" style="border: 1.5px solid #000; margin-top: -1px;">TERMOS DE SERVIÇO / GARANTIA</div>
+        
+        <div class="p-4" style="border: 1.5px solid #000; margin-top: -1px; min-height: 150px;">
+            <textarea class="edit-input text-[11px] leading-tight text-justify h-36" style="resize: none;">* A garantia de 90 dias será somente de peça trocada ou serviço descrito nesta O.S.
+* Aparelhos que não ligam ou estejam com a tela quebrada não nos responsabilizamos outros defeitos além dos descritos nessa ordem de serviço.
+* Caso seu aparelho tenha tido contato com água ou umidade, a abertura pode danificar a placa definitivamente, inutilizando o aparelho.
+* A garantia não cobre mau uso, quedas, telas trincadas ou aberto por outras pessoas não autorizadas.
+* A não retirada do aparelho no prazo de 90 dias corridos implicará em cobrança de guarda ou venda para custeio.</textarea>
+        </div>
+
+        <div class="bg-gray-os text-center font-bold text-sm p-2" style="border: 1.5px solid #000; margin-top: -1px;">ORÇAMENTO</div>
+        <div class="p-3 flex justify-between items-center" style="border: 1.5px solid #000; margin-top: -1px;">
+            <span class="text-sm font-bold uppercase">Valor Total do Serviço:</span>
+            <div class="text-3xl font-black">R$ <input type="number" class="edit-input inline-block w-40 text-right font-black" value="0.00" step="0.01"></div>
+        </div>
+
+        <div class="mt-16 flex justify-around items-end text-center">
+            <div class="w-72 border-t-2 border-black pt-1">
+                <p class="text-[11px] font-bold">SMARTCELL</p>
+                <p class="text-[10px] text-gray-600">Assinatura do Técnico</p>
+            </div>
+            <div class="w-72 border-t-2 border-black pt-1">
+                <p class="text-[10px]">Assinatura do Cliente</p>
+            </div>
+        </div>
+
+        <div class="text-center text-[10px] mt-12 italic text-gray-400">
+            <input type="text" class="edit-input text-center text-gray-400 italic" value="&quot;Sua satisfação é o nosso compromisso.&quot;">
         </div>
     </div>
 
-    <script>
-        function gerarEImprimir() {
-            // Captura os dados
-            const nome = document.getElementById('in_nome').value;
-            const fone = document.getElementById('in_fone').value;
-            const modelo = document.getElementById('in_modelo').value;
-            const senha = document.getElementById('in_senha').value;
-            const imei = document.getElementById('in_imei').value;
-            const servico = document.getElementById('in_servico').value;
-            const dataHoje = new Date().toLocaleDateString('pt-BR');
-            // Gera um número de OS aleatório simples para o exemplo
-            const numOs = "SC-" + Math.floor(Math.random() * 9000 + 1000); 
-
-            // Validação simples
-            if(!nome || !modelo) {
-                alert("⚠️ Por favor, preencha pelo menos o Nome do Cliente e o Modelo do aparelho.");
-                return;
-            }
-
-            // Alimenta o papel da O.S.
-            document.getElementById('out_nome').innerText = nome;
-            document.getElementById('out_nome_ass').innerText = nome; // Nome para assinatura
-            document.getElementById('out_fone').innerText = fone;
-            document.getElementById('out_modelo').innerText = modelo;
-            document.getElementById('out_senha').innerText = senha;
-            document.getElementById('out_imei').innerText = imei;
-            document.getElementById('out_servico').innerText = servico;
-            document.getElementById('out_data').innerText = dataHoje;
-            document.getElementById('out_os_num').innerText = numOs;
-
-            // Abre o diálogo de impressão
-            // Pequeno delay para garantir que o navegador renderizou o texto novo
-            setTimeout(() => {
-                window.print();
-            }, 100);
-        }
-    </script>
 </body>
 </html>
